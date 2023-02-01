@@ -20,7 +20,6 @@ def download_txt(url, file_path):
         check_for_redirect(response)
     except requests.HTTPError:
         return
-    print(file_path)
     with open(file_path, 'wb') as file:
         file.write(response.content)
 
@@ -62,7 +61,6 @@ def download_book(url, id, book_path='book', image_path='image'):
     if not os.path.exists(image_path):
         os.makedirs(image_path)
 
-    print(id)
     try:
         author, title, book_url, image_url, *other = get_book_parameters(url)
 
