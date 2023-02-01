@@ -36,19 +36,21 @@ def get_book_parameters(url):
     header = header.split("::")
     author = header[1]
     title = header[0]
-    comments = []
+    genres = soup.find('span', class_="d_book").find('a').text
 
+    comments = []
     for comment in soup.find_all('div',class_='texts'):
         comments.append(comment.find('span').text)
+
     image = soup.find('div',class_='bookimage').find('a').find('img')
     if image:
         image_url = image['src']
-    print(image)
+
     book_url = soup.find('a',title=re.compile('txt'))
     if book_url:
         book_url = book_url['href']
 
-    return author, title, book_url, image_url, comments
+    return author, title, book_url, image_url, comments, genres
 
 
 def download_book(url,id, book_path='book', image_path = 'image'):
