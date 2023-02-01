@@ -1,8 +1,11 @@
-import re, os
+import argparse
+import os
+import re
+from pathlib import PurePath
 from urllib.parse import urlparse
+
 import requests
 from bs4 import BeautifulSoup
-from pathlib import PurePath
 
 
 def check_for_redirect(response):
@@ -18,7 +21,7 @@ def download_txt(url, file_path):
     except requests.HTTPError:
         return
     print(file_path)
-    with open(file_path,'wb') as file:
+    with open(file_path, 'wb') as file:
         file.write(response.content)
 
 
@@ -39,21 +42,21 @@ def get_book_parameters(url):
     genres = soup.find('span', class_="d_book").find('a').text
 
     comments = []
-    for comment in soup.find_all('div',class_='texts'):
+    for comment in soup.find_all('div', class_='texts'):
         comments.append(comment.find('span').text)
 
-    image = soup.find('div',class_='bookimage').find('a').find('img')
+    image = soup.find('div', class_='bookimage').find('a').find('img')
     if image:
         image_url = image['src']
 
-    book_url = soup.find('a',title=re.compile('txt'))
+    book_url = soup.find('a', title=re.compile('txt'))
     if book_url:
         book_url = book_url['href']
 
     return author, title, book_url, image_url, comments, genres
 
 
-def download_book(url,id, book_path='book', image_path = 'image'):
+def download_book(url, id, book_path='book', image_path='image'):
     if not os.path.exists(book_path):
         os.makedirs(book_path)
     if not os.path.exists(image_path):
@@ -61,27 +64,26 @@ def download_book(url,id, book_path='book', image_path = 'image'):
 
     print(id)
     try:
-        author, title, book_url, image_url = get_book_parameters(url)
+        author, title, book_url, image_url, *other = get_book_parameters(url)
+
         if book_url:
             base_url = urlparse(url)
             base_url = f'{base_url.scheme}://{base_url.netloc}'
-            download_txt(f'{base_url}/{book_url}',PurePath(book_path,f'{id}. {clear_name(author)} - {clear_name(title)}.txt'))
+            download_txt(f'{base_url}/{book_url}',
+                         PurePath(book_path, f'{id}. {clear_name(author)} - {clear_name(title)}.txt'))
             if image_url:
                 download_txt(f'{base_url}/{image_url}',
                              PurePath(image_path, f'{id}. {clear_name(author)} - {clear_name(title)}.jpg'))
     except requests.HTTPError:
         pass
 
-if __name__=='__main__':
-    # response = requests.get(f"https://tululu.org/txt.php?id={5}")
-    # print(response.history)
-    # url = 'https://tululu.org/txt.php?id=1'
-    # for i in range(1,11):
-    #     download_image(f"https://tululu.org/txt.php?id={i}", f'{i}.txt')
-    # response = requests.get(f"https://tululu.org/b5/")
-    # for i in range(1,11):
-        # download_book(f'https://tululu.org/b{i}/',i)
-    # download_book(f'https://tululu.org/b{9}/', 9)
-    print(get_book_parameters(f'https://tululu.org/b{9}/'))
-    # with open('book/9.   Крейнер Стюарт - Бизнес путь: Джек Уэлч. 10 секретов величайшего в мире короля менеджмента  ','wb') as file:
-    #     print('!')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser("download book from tululu.org")
+    parser.add_argument('-sid', '--start_id', help='id of start book', default=0, type=int)
+    parser.add_argument('-eid', '--end_id', help='id of end book', default=1, type = int)
+    parser.add_argument('-b_path', '--book_path', help="path to save book default=book", default='book')
+    parser.add_argument('-i_path', '--image_path', help="path to save images, default = images", default='images')
+    args = parser.parse_args()
+    for i in range(args.start_id, args.end_id+1):
+        download_book(f'https://tululu.org/b{i}/', i, book_path=args.book_path, image_path=args.image_path)
