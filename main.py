@@ -83,5 +83,5 @@ if __name__ == '__main__':
     parser.add_argument('-b_path', '--book_path', help="path to save book default=book", default='book')
     parser.add_argument('-i_path', '--image_path', help="path to save images, default = images", default='images')
     args = parser.parse_args()
-    for i in range(args.start_id, args.end_id+1):
-        download_book(f'https://tululu.org/b{i}/', i, book_path=args.book_path, image_path=args.image_path)
+    for id in range(args.start_id, args.end_id+1):
+        download_book(f'https://tululu.org/b{id}/', id, book_path=args.book_path, image_path=args.image_path)
