@@ -4,6 +4,21 @@ from pathlib import PurePath
 from urllib.parse import urlparse, urljoin
 import requests
 from bs4 import BeautifulSoup
+import time
+
+
+def get_response(url):
+    flag = True
+    start_time = time.time()
+    while flag:
+        try:
+            response = requests.get(url)
+            flag = False
+        except requests.ConnectionError:
+            if time.time() - start_time > 300:
+                sys.exit("no connection for more than 5 minutes")
+            time.sleep(1)
+    return response
 
 
 def check_for_redirect(response):
@@ -17,7 +32,7 @@ def check_dir(path):
 
 
 def download_content_in_file(url, file_path):
-    response = requests.get(f"{url}")
+    response = get_response(f"{url}")
     response.raise_for_status()
 
     check_for_redirect(response)
@@ -32,7 +47,7 @@ def clear_name(filename):
 
 
 def get_book_parameters(url):
-    response = requests.get(f"{url}")
+    response = get_response(f"{url}")
     response.raise_for_status()
     check_for_redirect(response)
     soup = BeautifulSoup(response.text, 'lxml')
