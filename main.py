@@ -57,7 +57,7 @@ def get_book_parameters(url):
     return author, title, book_url, image_url, comments, genres
 
 
-def download_book(url, id, book_path='book', image_path='image'):
+def download_book(url, book_id, book_path='book', image_path='image'):
     check_dir(book_path)
     check_dir(image_path)
 
@@ -68,13 +68,13 @@ def download_book(url, id, book_path='book', image_path='image'):
             return
         base_url = urlparse(url)
         book_download_link = f'{base_url.scheme}://{base_url.netloc}/{book_url}'
-        book_download_path =PurePath(book_path, f'{id}. {clear_name(author)} - {clear_name(title)}.txt')
+        book_download_path =PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
         download_txt(book_download_link, book_download_path)
         if not image_url:
             return
 
         book_image_download_url = f'{base_url.scheme}://{base_url.netloc}/{image_url}'
-        book_image_download_path = PurePath(image_path, f'{id}. {clear_name(author)} - {clear_name(title)}.jpg')
+        book_image_download_path = PurePath(image_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.jpg')
         download_txt(book_image_download_url,book_image_download_path)
 
     except requests.HTTPError:
@@ -88,5 +88,5 @@ if __name__ == '__main__':
     parser.add_argument('-b_path', '--book_path', help="path to save book default=book", default='book')
     parser.add_argument('-i_path', '--image_path', help="path to save images, default = images", default='images')
     args = parser.parse_args()
-    for id in range(args.start_id, args.end_id+1):
-        download_book(f'https://tululu.org/b{id}/', id, book_path=args.book_path, image_path=args.image_path)
+    for book_id in range(args.start_id, args.end_id+1):
+        download_book(f'https://tululu.org/b{book_id}/', book_id, book_path=args.book_path, image_path=args.image_path)
