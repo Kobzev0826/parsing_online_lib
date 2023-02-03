@@ -18,7 +18,7 @@ def check_dir(path):
         os.makedirs(path)
 
 
-def download_txt(url, file_path):
+def download_content_in_file(url, file_path):
     response = requests.get(f"{url}")
     response.raise_for_status()
     try:
@@ -69,13 +69,13 @@ def download_book(url, book_id, book_path='book', image_path='image'):
         base_url = urlparse(url)
         book_download_link = f'{base_url.scheme}://{base_url.netloc}/{book_url}'
         book_download_path =PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
-        download_txt(book_download_link, book_download_path)
+        download_content_in_file(book_download_link, book_download_path)
         if not image_url:
             return
 
         book_image_download_url = f'{base_url.scheme}://{base_url.netloc}/{image_url}'
         book_image_download_path = PurePath(image_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.jpg')
-        download_txt(book_image_download_url,book_image_download_path)
+        download_content_in_file(book_image_download_url,book_image_download_path)
 
     except requests.HTTPError:
         pass
