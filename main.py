@@ -39,10 +39,7 @@ def get_book_parameters(url):
     response.raise_for_status()
     check_for_redirect(response)
     soup = BeautifulSoup(response.text, 'lxml')
-    header = soup.find('h1').text
-    header = header.split("::")
-    author = header[1]
-    title = header[0]
+    title, author, *other = soup.find('h1').text.split('::')
     genres = soup.find('span', class_="d_book").find('a').text
 
     comments = []
@@ -81,8 +78,8 @@ def download_book(url, id, book_path='book', image_path='image'):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("download book from tululu.org")
-    parser.add_argument('-sid', '--start_id', help='id of start book', default=0, type=int)
-    parser.add_argument('-eid', '--end_id', help='id of end book', default=1, type = int)
+    parser.add_argument('-sid', '--start_id', help='id of start book', default=1, type=int)
+    parser.add_argument('-eid', '--end_id', help='id of end book', default=3, type = int)
     parser.add_argument('-b_path', '--book_path', help="path to save book default=book", default='book')
     parser.add_argument('-i_path', '--image_path', help="path to save images, default = images", default='images')
     args = parser.parse_args()
