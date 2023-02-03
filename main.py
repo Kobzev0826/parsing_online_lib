@@ -4,7 +4,7 @@ from pathlib import PurePath
 from urllib.parse import urlparse, urljoin
 import requests
 from bs4 import BeautifulSoup
-import time
+import time, tqdm
 
 
 def get_response(url):
@@ -114,5 +114,6 @@ if __name__ == '__main__':
     parser.add_argument('-b_path', '--book_path', help="path to save book default=book", default='book')
     parser.add_argument('-i_path', '--image_path', help="path to save images, default = images", default='images')
     args = parser.parse_args()
-    for book_id in range(args.start_id, args.end_id+1):
+    for book_id in tqdm.tqdm(range(args.start_id, args.end_id+1), desc = "Progress downloading"):#range(args.start_id, args.end_id+1):
         download_book(f'https://tululu.org/b{book_id}/', book_id, book_path=args.book_path, image_path=args.image_path)
+
