@@ -1,15 +1,14 @@
 import argparse
-import os
-import re
+import os,re, sys
 from pathlib import PurePath
 from urllib.parse import urlparse
-
 import requests
 from bs4 import BeautifulSoup
 
 
 def check_for_redirect(response):
     if response.history:
+        # print(f"redirect in link {response.history}", file=sys.stderr)
         raise (requests.HTTPError)
 
 
@@ -21,10 +20,9 @@ def check_dir(path):
 def download_content_in_file(url, file_path):
     response = requests.get(f"{url}")
     response.raise_for_status()
-    try:
-        check_for_redirect(response)
-    except requests.HTTPError:
-        return
+
+    check_for_redirect(response)
+
     with open(file_path, 'wb') as file:
         file.write(response.content)
 
@@ -63,22 +61,36 @@ def download_book(url, book_id, book_path='book', image_path='image'):
 
     try:
         author, title, book_url, image_url, *other = get_book_parameters(url)
-
-        if not book_url:
-            return
-        base_url = urlparse(url)
-        book_download_link = f'{base_url.scheme}://{base_url.netloc}/{book_url}'
-        book_download_path =PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
-        download_content_in_file(book_download_link, book_download_path)
-        if not image_url:
-            return
-
-        book_image_download_url = f'{base_url.scheme}://{base_url.netloc}/{image_url}'
-        book_image_download_path = PurePath(image_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.jpg')
-        download_content_in_file(book_image_download_url,book_image_download_path)
-
     except requests.HTTPError:
-        pass
+        print(f"redirect in link {url}", file=sys.stderr)
+        return
+
+    if not book_url:
+        print(f"no book to link {url}", file=sys.stderr)
+        return
+
+    base_url = urlparse(url)
+    book_download_link = f'{base_url.scheme}://{base_url.netloc}/{book_url}'
+    book_download_path =PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
+    try:
+        download_content_in_file(book_download_link, book_download_path)
+    except requests.HTTPError:
+        print(f"redirect in link {book_download_link}", file=sys.stderr)
+        return
+
+    if not image_url:
+        print(f"no image link {url}", file=sys.stderr)
+        return
+
+    book_image_download_url = f'{base_url.scheme}://{base_url.netloc}/{image_url}'
+    book_image_download_path = PurePath(image_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.jpg')
+    try:
+        download_content_in_file(book_image_download_url,book_image_download_path)
+    except requests.HTTPError:
+        print(f"redirect in link {book_image_download_url}", file=sys.stderr)
+        return
+
+
 
 
 if __name__ == '__main__':
