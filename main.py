@@ -67,14 +67,16 @@ def download_book(url, id, book_path='book', image_path='image'):
         if not book_url:
             return
         base_url = urlparse(url)
-        base_url = f'{base_url.scheme}://{base_url.netloc}'
-        download_txt(f'{base_url}/{book_url}',
-                     PurePath(book_path, f'{id}. {clear_name(author)} - {clear_name(title)}.txt'))
+        book_download_link = f'{base_url.scheme}://{base_url.netloc}/{book_url}'
+        book_download_path =PurePath(book_path, f'{id}. {clear_name(author)} - {clear_name(title)}.txt')
+        download_txt(book_download_link, book_download_path)
         if not image_url:
             return
 
-        download_txt(f'{base_url}/{image_url}',
-                             PurePath(image_path, f'{id}. {clear_name(author)} - {clear_name(title)}.jpg'))
+        book_image_download_url = f'{base_url.scheme}://{base_url.netloc}/{image_url}'
+        book_image_download_path = PurePath(image_path, f'{id}. {clear_name(author)} - {clear_name(title)}.jpg')
+        download_txt(book_image_download_url,book_image_download_path)
+
     except requests.HTTPError:
         pass
 
