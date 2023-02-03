@@ -1,14 +1,13 @@
 import argparse
 import os,re, sys
 from pathlib import PurePath
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import requests
 from bs4 import BeautifulSoup
 
 
 def check_for_redirect(response):
     if response.history:
-        # print(f"redirect in link {response.history}", file=sys.stderr)
         raise (requests.HTTPError)
 
 
@@ -69,8 +68,8 @@ def download_book(url, book_id, book_path='book', image_path='image'):
         print(f"no book to link {url}", file=sys.stderr)
         return
 
-    base_url = urlparse(url)
-    book_download_link = f'{base_url.scheme}://{base_url.netloc}/{book_url}'
+
+    book_download_link = urljoin(url, book_url)
     book_download_path =PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
     try:
         download_content_in_file(book_download_link, book_download_path)
@@ -82,7 +81,7 @@ def download_book(url, book_id, book_path='book', image_path='image'):
         print(f"no image link {url}", file=sys.stderr)
         return
 
-    book_image_download_url = f'{base_url.scheme}://{base_url.netloc}/{image_url}'
+    book_image_download_url = urljoin(url,image_url)
     book_image_download_path = PurePath(image_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.jpg')
     try:
         download_content_in_file(book_image_download_url,book_image_download_path)
