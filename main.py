@@ -13,6 +13,11 @@ def check_for_redirect(response):
         raise (requests.HTTPError)
 
 
+def check_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
 def download_txt(url, file_path):
     response = requests.get(f"{url}")
     response.raise_for_status()
@@ -56,10 +61,8 @@ def get_book_parameters(url):
 
 
 def download_book(url, id, book_path='book', image_path='image'):
-    if not os.path.exists(book_path):
-        os.makedirs(book_path)
-    if not os.path.exists(image_path):
-        os.makedirs(image_path)
+    check_dir(book_path)
+    check_dir(image_path)
 
     try:
         author, title, book_url, image_url, *other = get_book_parameters(url)
