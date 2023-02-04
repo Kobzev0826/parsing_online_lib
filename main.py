@@ -1,10 +1,14 @@
 import argparse
-import os,re, sys
+import os
+import re
+import sys
+import time
 from pathlib import PurePath
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin
+
 import requests
+import tqdm
 from bs4 import BeautifulSoup
-import time, tqdm
 
 
 def get_response(url):
@@ -13,6 +17,8 @@ def get_response(url):
     while flag:
         try:
             response = requests.get(url)
+            response.raise_for_status()
+            check_for_redirect(response)
             flag = False
         except requests.ConnectionError:
             if time.time() - start_time > 300:
@@ -26,16 +32,8 @@ def check_for_redirect(response):
         raise (requests.HTTPError)
 
 
-def check_dir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-
 def download_content_in_file(url, file_path):
-    response = get_response(f"{url}")
-    response.raise_for_status()
-
-    check_for_redirect(response)
+    response = get_response(url)
 
     with open(file_path, 'wb') as file:
         file.write(response.content)
@@ -47,9 +45,7 @@ def clear_name(filename):
 
 
 def get_book_parameters(url):
-    response = get_response(f"{url}")
-    response.raise_for_status()
-    check_for_redirect(response)
+    response = get_response(url)
     soup = BeautifulSoup(response.text, 'lxml')
     title, author, *other = soup.find('h1').text.split('::')
     genres = soup.find('span', class_="d_book").find('a').text
@@ -70,8 +66,8 @@ def get_book_parameters(url):
 
 
 def download_book(url, book_id, book_path='book', image_path='image'):
-    check_dir(book_path)
-    check_dir(image_path)
+    os.makedirs(book_path, exist_ok=True)
+    os.makedirs(image_path, exist_ok=True)
 
     try:
         author, title, book_url, image_url, *other = get_book_parameters(url)
@@ -83,9 +79,8 @@ def download_book(url, book_id, book_path='book', image_path='image'):
         print(f"no book to link {url}", file=sys.stderr)
         return
 
-
     book_download_link = urljoin(url, book_url)
-    book_download_path =PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
+    book_download_path = PurePath(book_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.txt')
     try:
         download_content_in_file(book_download_link, book_download_path)
     except requests.HTTPError:
@@ -96,24 +91,21 @@ def download_book(url, book_id, book_path='book', image_path='image'):
         print(f"no image link {url}", file=sys.stderr)
         return
 
-    book_image_download_url = urljoin(url,image_url)
+    book_image_download_url = urljoin(url, image_url)
     book_image_download_path = PurePath(image_path, f'{book_id}. {clear_name(author)} - {clear_name(title)}.jpg')
     try:
-        download_content_in_file(book_image_download_url,book_image_download_path)
+        download_content_in_file(book_image_download_url, book_image_download_path)
     except requests.HTTPError:
         print(f"redirect in link {book_image_download_url}", file=sys.stderr)
         return
 
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("download book from tululu.org")
     parser.add_argument('-sid', '--start_id', help='id of start book', default=1, type=int)
-    parser.add_argument('-eid', '--end_id', help='id of end book', default=3, type = int)
+    parser.add_argument('-eid', '--end_id', help='id of end book', default=3, type=int)
     parser.add_argument('-b_path', '--book_path', help="path to save book default=book", default='book')
     parser.add_argument('-i_path', '--image_path', help="path to save images, default = images", default='images')
     args = parser.parse_args()
-    for book_id in tqdm.tqdm(range(args.start_id, args.end_id+1), desc = "Progress downloading"):#range(args.start_id, args.end_id+1):
+    for book_id in tqdm.tqdm(range(args.start_id, args.end_id + 1), desc="Progress downloading"):
         download_book(f'https://tululu.org/b{book_id}/', book_id, book_path=args.book_path, image_path=args.image_path)
-
