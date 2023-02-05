@@ -44,8 +44,8 @@ def clear_name(filename):
     return filename
 
 
-def get_book_parameters(url):
-    response = get_response(url)
+def get_book_parameters(response):
+
     soup = BeautifulSoup(response.text, 'lxml')
     title, author, *other = soup.find('h1').text.split('::')
     genres = soup.find('span', class_="d_book").find('a').text
@@ -68,9 +68,9 @@ def get_book_parameters(url):
 def download_book(url, book_id, book_path='book', image_path='image'):
     os.makedirs(book_path, exist_ok=True)
     os.makedirs(image_path, exist_ok=True)
-
+    response = get_response(url)
     try:
-        author, title, book_url, image_url, *other = get_book_parameters(url)
+        author, title, book_url, image_url, *other = get_book_parameters(response)
     except requests.HTTPError:
         print(f"redirect in link {url}", file=sys.stderr)
         return
