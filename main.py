@@ -68,8 +68,8 @@ def get_book_parameters(response):
 def download_book(url, book_id, book_path='book', image_path='image'):
     os.makedirs(book_path, exist_ok=True)
     os.makedirs(image_path, exist_ok=True)
-    response = get_response(url)
     try:
+        response = get_response(url)
         author, title, book_url, image_url, *other = get_book_parameters(response)
     except requests.HTTPError:
         print(f"redirect in link {url}", file=sys.stderr)
